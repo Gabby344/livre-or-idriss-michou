@@ -1,8 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { firebaseConfig } from "./config.js";
+import { firebaseConfig, ADMIN_EMAIL } from "./config.js";
 
 export * from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 export * from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -18,17 +17,9 @@ export async function ensureGuest() {
   return auth.currentUser;
 }
 
-/** Vrai si l'utilisateur possède un document admin/{uid}.
- *  En cas d'échec de lecture, le code d'erreur est gardé dans isAdmin.lastError. */
+/** Administrateur = compte dont l'e-mail est ADMIN_EMAIL.
+ *  La vraie protection est dans firestore.rules (vérification côté serveur). */
 export async function isAdmin(user) {
-  isAdmin.lastError = null;
-  if (!user || user.isAnonymous) return false;
-  try {
-    const snap = await getDoc(doc(db, "admin", user.uid));
-    return snap.exists();
-  } catch (e) {
-    console.error("[admin] Lecture impossible :", e.code);
-    isAdmin.lastError = e.code;
-    return false;
-  }
+  if (!user || user.isAnonymous || !user.email) return false;
+  return user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 }
