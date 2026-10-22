@@ -70,7 +70,11 @@ export const BOOK = {
 };
 
 export const RELATIONS = [
-  "Famille de la mariée", "Famille du marié", "Ami(e) des mariés",
-  "Collègue", "Communauté / Église", "Voisin(e)", "Invité(e)"
-export const ADMIN_EMAIL = "gabbyumba344@gmail.com";
+  "Famille de la mariée",
+  "Famille du marié",
+  "Collègue",
+  "Communauté / Église",
+  "Voisin(e)"
 ];
+
+export const ADMIN_EMAIL = "gabbyumba344@gmail.com";
