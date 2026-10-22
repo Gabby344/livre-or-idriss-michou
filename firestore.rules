@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admin/$(request.auth.uid));
+    }
+    function isOwner() { return signedIn() && resource.data.ownerUid == request.auth.uid; }
+    function validText(v, max) { return v is string && v.size() > 0 && v.size() <= max; }
+
+    // Comptes administrateurs : lecture de son propre document ; création possible
+    // uniquement tant que la configuration initiale (meta/setup) n'a pas été faite.
+    match /admin/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid
+                    && !exists(/databases/$(database)/documents/meta/setup);
+      allow update, delete: if false;
+    }
+
+    // Verrou de la configuration initiale
+    match /meta/{id} {
+      allow get: if true;
+      allow create: if id == 'setup' && signedIn()
+                    && !exists(/databases/$(database)/documents/meta/setup)
+                    && existsAfter(/databases/$(database)/documents/admin/$(request.auth.uid));
+      allow update, delete: if false;
+    }
+
+    match /messages/{id} {
+      // Public : messages approuvés. Auteur : les siens. Admin : tout.
+      allow read: if resource.data.status == 'approved' || isOwner() || isAdmin();
+
+      // Un invité (connecté anonymement) ne peut créer qu'un message « pending » à son nom.
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['name','relation','message','status','ownerUid','createdAt','updatedAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && validText(request.resource.data.name, 80)
+        && validText(request.resource.data.relation, 80)
+        && validText(request.resource.data.message, 1500)
+        && request.resource.data.createdAt == request.time;
+
+      // L'auteur modifie son texte (retour en « pending ») ; l'admin peut tout modifier.
+      allow update: if isAdmin()
+        || (isOwner()
+            && request.resource.data.ownerUid == resource.data.ownerUid
+            && request.resource.data.status == 'pending'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','relation','message','status','updatedAt'])
+            && validText(request.resource.data.name, 80)
+            && validText(request.resource.data.relation, 80)
+            && validText(request.resource.data.message, 1500));
+
+      allow delete: if isOwner() || isAdmin();
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}

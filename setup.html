@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Première configuration — Livre d'or</title>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,500;1,500&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<main class="login" style="max-width:520px">
+  <h1>Première configuration</h1>
+  <div id="state"><p>Vérification…</p></div>
+  <form id="form" class="card" hidden>
+    <p class="lead" style="margin:0">Choisissez l'adresse e-mail et le mot de passe de l'administrateur. Cette page ne fonctionne qu'une seule fois : elle se verrouille automatiquement ensuite.</p>
+    <label>Adresse e-mail <input type="email" id="email" autocomplete="username" required></label>
+    <label>Mot de passe <input type="password" id="pw" minlength="10" autocomplete="new-password" required><span class="hint">10 caractères minimum.</span></label>
+    <label>Confirmer le mot de passe <input type="password" id="pw2" minlength="10" autocomplete="new-password" required></label>
+    <button class="btn btn-wine" id="go" type="submit">Créer l'administrateur</button>
+  </form>
+  <p style="margin-top:1.5rem"><a href="index.html">Retour au livre d'or</a></p>
+</main>
+<script type="module">
+import { $, toast } from "./js/common.js";
+import { db, auth, doc, getDoc, writeBatch, serverTimestamp, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "./js/firebase.js";
+
+async function check() {
+  try {
+    const s = await getDoc(doc(db, "meta", "setup"));
+    if (s.exists()) {
+      $("#state").innerHTML = `<p>✅ La configuration est déjà faite. Vous pouvez <strong>supprimer ce fichier (setup.html)</strong> du dépôt, puis vous connecter sur <a href="admin.html">la page admin</a>.</p>`;
+    } else { $("#state").hidden = true; $("#form").hidden = false; }
+  } catch (e) {
+    console.error(e);
+    $("#state").innerHTML = `<p>Impossible de joindre Firestore. Avez-vous créé la base et publié les règles (voir README) ?</p>`;
+  }
+}
+check();
+
+$("#form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const email = $("#email").value.trim(), pw = $("#pw").value;
+  if (pw !== $("#pw2").value) return toast("Les deux mots de passe sont différents.", "err");
+  $("#go").disabled = true;
+  try {
+    let cred;
+    try { cred = await createUserWithEmailAndPassword(auth, email, pw); }
+    catch (e) {
+      if (e.code === "auth/email-already-in-use") cred = await signInWithEmailAndPassword(auth, email, pw);
+      else throw e;
+    }
+    const uid = cred.user.uid, b = writeBatch(db);
+    b.set(doc(db, "admin", uid), { email, createdAt: serverTimestamp() });
+    b.set(doc(db, "meta", "setup"), { uid, createdAt: serverTimestamp(), version: 1 });
+    await b.commit();
+    toast("Administrateur créé. Supprimez maintenant setup.html du dépôt.");
+    setTimeout(() => location.href = "admin.html", 1800);
+  } catch (e) {
+    console.error(e);
+    const m = { "auth/operation-not-allowed": "Activez « E-mail/Mot de passe » dans Firebase Authentication.",
+      "auth/weak-password": "Mot de passe trop faible.", "auth/invalid-credential": "Cette adresse existe déjà avec un autre mot de passe.",
+      "permission-denied": "Refusé : la configuration a déjà été faite ou les règles ne sont pas publiées." }[e.code] || e.message;
+    toast(m, "err", 9000); $("#go").disabled = false;
+  }
+});
+</script>
+</body>
+</html>

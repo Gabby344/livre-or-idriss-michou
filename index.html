@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Livre d'or — Idriss & Michou</title>
+<meta name="description" content="Laissez un mot doux dans le livre d'or du mariage d'Idriss & Michou, le 23 octobre 2026.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <h1 class="hero-names" aria-label="Idriss et Michou">
+        <span>Idriss</span><span class="amp" aria-hidden="true">&amp;</span><span class="second">Michou</span>
+      </h1>
+      <p class="hero-full" id="full-names"></p>
+      <p class="hero-date" id="wed-date"></p>
+      <p class="hero-welcome" id="welcome"></p>
+      <a class="btn btn-wine" href="#ecrire">Écrire dans le livre d'or</a>
+    </div>
+
+    <div class="carousel" aria-roledescription="carrousel" aria-label="Photos du couple">
+      <div class="frame" id="frame"></div>
+      <p class="cap" id="caption" aria-live="polite"></p>
+      <div class="car-nav">
+        <button class="car-btn" id="prev" aria-label="Photo précédente">&#8249;</button>
+        <div class="dots" id="dots"></div>
+        <button class="car-btn" id="next" aria-label="Photo suivante">&#8250;</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="block write" id="ecrire">
+  <div class="wrap">
+    <div>
+      <h2>Un mot pour les mariés</h2>
+      <p class="lead">Votre message sera lu par l'équipe qui s'occupe du livre, puis publié ici. Vous pourrez le modifier ou le supprimer depuis cet appareil.</p>
+      <form id="form" class="card" novalidate>
+        <label>Votre nom
+          <input id="f-name" name="name" maxlength="80" autocomplete="name" required>
+        </label>
+        <label>Votre lien avec les mariés
+          <input id="f-rel" name="relation" maxlength="80" list="relations" placeholder="Ami(e), famille, collègue…" required>
+          <datalist id="relations"></datalist>
+        </label>
+        <label>Votre message
+          <textarea id="f-msg" name="message" maxlength="1500" required></textarea>
+          <span class="count" id="count">0 / 1500</span>
+        </label>
+        <input class="hp" id="f-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-wine" id="send" type="submit">Envoyer mon message</button>
+      </form>
+    </div>
+    <aside class="qr-box">
+      <div class="qr-img" id="qr"></div>
+      <p id="qr-text"></p>
+    </aside>
+  </div>
+</section>
+
+<section class="block mine" id="mine-sec" hidden>
+  <div class="wrap">
+    <h2>Mes messages</h2>
+    <p class="lead">Seuls les messages écrits depuis cet appareil apparaissent ici. Une modification renvoie le message en validation.</p>
+    <div class="msgs" id="mine"></div>
+  </div>
+</section>
+
+<section class="block" id="livre">
+  <div class="wrap">
+    <h2>Les mots de nos invités</h2>
+    <p class="lead">Les messages validés par les mariés.</p>
+    <div class="tools">
+      <label>Chercher par nom
+        <input id="search" type="search" placeholder="Ex. : Marie">
+      </label>
+    </div>
+    <div class="msgs" id="wall" aria-live="polite"></div>
+  </div>
+</section>
+
+<footer class="site-footer" id="site-footer"></footer>
+
+<dialog id="dlg">
+  <form method="dialog" id="edit-form">
+    <h3>Modifier mon message</h3>
+    <label>Nom <input id="e-name" maxlength="80" required></label>
+    <label>Lien avec les mariés <input id="e-rel" maxlength="80" required></label>
+    <label>Message <textarea id="e-msg" maxlength="1500" required></textarea></label>
+    <p class="hint">Après modification, votre message est de nouveau soumis à validation.</p>
+    <div class="row-actions">
+      <button class="btn btn-ghost btn-sm" type="button" id="e-cancel">Annuler</button>
+      <button class="btn btn-wine btn-sm" type="submit">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script type="module" src="js/index.js"></script>
+</body>
+</html>

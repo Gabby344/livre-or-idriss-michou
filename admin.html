@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Administration — Livre d'or</title>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,500;1,500&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<main id="login-view" class="login" hidden>
+  <h1>Espace administrateur</h1>
+  <form id="login-form" class="card">
+    <label>Adresse e-mail <input type="email" id="email" autocomplete="username" required></label>
+    <label>Mot de passe <input type="password" id="pw" autocomplete="current-password" required></label>
+    <button class="btn btn-wine" type="submit" id="login-btn">Se connecter</button>
+  </form>
+  <p class="hint" style="margin-top:1rem"><a href="index.html">Retour au livre d'or</a></p>
+</main>
+
+<div id="dash-view" hidden>
+  <header class="admin-top">
+    <div class="wrap">
+      <h1>Modération du livre d'or</h1>
+      <nav>
+        <a class="btn btn-ghost btn-sm" href="print.html">Imprimer le livre</a>
+        <a class="btn btn-ghost btn-sm" href="index.html">Voir le site</a>
+        <button class="btn btn-ghost btn-sm" id="logout">Se déconnecter</button>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="tabs" id="tabs" role="group" aria-label="Filtrer les messages"></div>
+    <div class="admin-list" id="list" aria-live="polite"></div>
+  </main>
+</div>
+
+<footer class="site-footer" id="site-footer"></footer>
+
+<dialog id="dlg">
+  <form method="dialog" id="edit-form">
+    <h3>Modifier le message</h3>
+    <label>Nom <input id="e-name" maxlength="80" required></label>
+    <label>Lien <input id="e-rel" maxlength="80" required></label>
+    <label>Message <textarea id="e-msg" maxlength="1500" required></textarea></label>
+    <div class="row-actions">
+      <button class="btn btn-ghost btn-sm" type="button" id="e-cancel">Annuler</button>
+      <button class="btn btn-wine btn-sm" type="submit">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>
