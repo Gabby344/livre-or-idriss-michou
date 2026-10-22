@@ -14,7 +14,10 @@ onAuthStateChanged(auth, async (user) => {
   if (!user || user.isAnonymous) { show("login"); return; }
   if (!(await isAdmin(user))) {
     show("login");
-    toast("Ce compte n'est pas administrateur de ce livre d'or.", "err", 8000);
+    const why = isAdmin.lastError === "permission-denied"
+      ? "Règles Firestore : lecture refusée. Publiez firestore.rules."
+      : `Aucun document admin/${user.uid} dans Firestore. Copiez cet UID.`;
+    toast(why, "err", 20000);
     await signOut(auth);
     return;
   }
