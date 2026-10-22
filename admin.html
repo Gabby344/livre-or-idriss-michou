@@ -16,6 +16,7 @@
     <label>Adresse e-mail <input type="email" id="email" autocomplete="username" required></label>
     <label>Mot de passe <input type="password" id="pw" autocomplete="current-password" required></label>
     <button class="btn btn-wine" type="submit" id="login-btn">Se connecter</button>
+    <p id="login-msg" role="alert" hidden style="margin:0;padding:.8rem 1rem;border-radius:10px;font-weight:500"></p>
   </form>
   <p class="hint" style="margin-top:1rem"><a href="index.html">Retour au livre d'or</a></p>
 </main>
@@ -32,6 +33,7 @@
     </div>
   </header>
   <main class="wrap">
+    <div class="note" id="dash-msg" role="alert" hidden></div>
     <div class="tabs" id="tabs" role="group" aria-label="Filtrer les messages"></div>
     <div class="admin-list" id="list" aria-live="polite"></div>
   </main>
