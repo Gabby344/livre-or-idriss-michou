@@ -18,11 +18,17 @@ export async function ensureGuest() {
   return auth.currentUser;
 }
 
-/** Vrai si l'utilisateur possède un document admin/{uid}. */
+/** Vrai si l'utilisateur possède un document admin/{uid}.
+ *  En cas d'échec de lecture, le code d'erreur est gardé dans isAdmin.lastError. */
 export async function isAdmin(user) {
+  isAdmin.lastError = null;
   if (!user || user.isAnonymous) return false;
   try {
     const snap = await getDoc(doc(db, "admin", user.uid));
     return snap.exists();
-  } catch { return false; }
+  } catch (e) {
+    console.error("[admin] Lecture impossible :", e.code);
+    isAdmin.lastError = e.code;
+    return false;
+  }
 }
