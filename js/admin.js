@@ -9,15 +9,32 @@ let all = [], filter = "pending", unsub = null, editId = null;
 const LABELS = { pending: "En attente", approved: "Approuvés", rejected: "Refusés", all: "Tous" };
 const STATUS = { pending: ["b-pending", "En attente"], approved: ["b-approved", "Publié"], rejected: ["b-rejected", "Refusé"] };
 
+/* Message affiché dans la page (visible aussi sur téléphone) */
+function setMsg(text, kind = "err") {
+  const el = $("#login-msg");
+  el.hidden = !text;
+  el.textContent = text || "";
+  el.style.background = kind === "ok" ? "#d9f1e3" : "#fbe0e3";
+  el.style.color = kind === "ok" ? "#17603a" : "#7a1527";
+}
+
+const ERRORS = {
+  "auth/invalid-credential": "E-mail ou mot de passe incorrect.",
+  "auth/wrong-password": "Mot de passe incorrect.",
+  "auth/user-not-found": "Aucun compte avec cet e-mail dans Firebase Authentication.",
+  "auth/invalid-email": "Adresse e-mail invalide.",
+  "auth/too-many-requests": "Trop d'essais. Attendez quelques minutes.",
+  "auth/operation-not-allowed": "La méthode « E-mail/Mot de passe » est désactivée dans Firebase → Authentication → Méthode de connexion.",
+  "auth/unauthorized-domain": "Domaine non autorisé : ajoutez gabby344.github.io dans Authentication → Paramètres → Domaines autorisés.",
+  "auth/network-request-failed": "Problème de réseau. Vérifiez votre connexion."
+};
+
 onAuthStateChanged(auth, async (user) => {
   if (unsub) { unsub(); unsub = null; }
   if (!user || user.isAnonymous) { show("login"); return; }
   if (!(await isAdmin(user))) {
     show("login");
-    const why = isAdmin.lastError === "permission-denied"
-      ? "Règles Firestore : lecture refusée. Publiez firestore.rules."
-      : `Aucun document admin/${user.uid} dans Firestore. Copiez cet UID.`;
-    toast(why, "err", 20000);
+    setMsg(`Le compte ${user.email || "(sans e-mail)"} n'est pas l'administrateur de ce livre d'or.`);
     await signOut(auth);
     return;
   }
@@ -25,8 +42,16 @@ onAuthStateChanged(auth, async (user) => {
   unsub = onSnapshot(query(collection(db, "messages")), (snap) => {
     all = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (b.createdAt?.seconds ?? 9e12) - (a.createdAt?.seconds ?? 9e12));
+    $("#dash-msg").hidden = true;
     draw();
-  }, (e) => { console.error(e); toast("Lecture des messages impossible (règles Firestore ?).", "err", 8000); });
+  }, (e) => {
+    console.error(e);
+    const m = $("#dash-msg");
+    m.hidden = false;
+    m.textContent = e.code === "permission-denied"
+      ? "Lecture refusée par Firestore : publiez le fichier firestore.rules (onglet Règles → Publier)."
+      : "Erreur de lecture : " + (e.code || e.message);
+  });
 });
 
 function show(v) {
@@ -37,9 +62,17 @@ function show(v) {
 $("#login-form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const b = $("#login-btn"); b.disabled = true;
-  try { await signInWithEmailAndPassword(auth, $("#email").value.trim(), $("#pw").value); }
-  catch (e) { console.error(e); toast("Adresse e-mail ou mot de passe incorrect.", "err"); }
-  finally { b.disabled = false; }
+  setMsg("Connexion en cours…", "ok");
+  try {
+    const timeout = new Promise((_, rej) => setTimeout(() => rej({ code: "timeout" }), 15000));
+    await Promise.race([signInWithEmailAndPassword(auth, $("#email").value.trim(), $("#pw").value), timeout]);
+    setMsg("Connecté ✓ chargement…", "ok");
+  } catch (e) {
+    console.error(e);
+    setMsg(e.code === "timeout"
+      ? "Pas de réponse de Firebase (réseau lent ou domaine non autorisé). Réessayez."
+      : (ERRORS[e.code] || `Erreur : ${e.code || e.message}`));
+  } finally { b.disabled = false; }
 });
 $("#logout").onclick = () => signOut(auth);
 
