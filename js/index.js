@@ -85,7 +85,7 @@ let approved = [], mine = [];
 
 function drawWall() {
   const q = $("#search").value.trim().toLowerCase();
-  const list = approved.filter((m) => !q || m.name.toLowerCase().includes(q));
+  const list = approved.filter((m) => !q || String(m.name).toLowerCase().includes(q));
   $("#wall").innerHTML = list.length
     ? list.map((m) => card(m)).join("")
     : `<div class="empty">${approved.length ? "Aucun message à ce nom." : "Les premiers messages apparaîtront ici dès qu'ils seront validés."}</div>`;
@@ -102,15 +102,24 @@ async function start() {
   } catch (e) {
     console.error(e);
     toast("Connexion impossible. Vérifiez que l'authentification anonyme est activée dans Firebase.", "err", 9000);
+    $("#wall").innerHTML = `<div class="empty">Connexion impossible (${esc(e.code || e.message)}).</div>`;
     return;
   }
-  onSnapshot(query(col, where("status", "==", "approved")), (snap) => {
-    approved = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort(byDateDesc);
-    drawWall();
-  }, (e) => { console.error(e); $("#wall").innerHTML = `<div class="empty">Impossible de charger les messages pour le moment.</div>`; });
 
-  onSnapshot(query(col, where("ownerUid", "==", user.uid)), (snap) => {
-    mine = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort(byDateDesc);
+  // Messages approuvés : uniquement ceux confirmés par le serveur
+  onSnapshot(query(col, where("status", "==", "approved")), { includeMetadataChanges: true }, (snap) => {
+    approved = snap.docs.filter((d) => !d.metadata.hasPendingWrites)
+      .map((d) => ({ id: d.id, ...d.data() })).sort(byDateDesc);
+    drawWall();
+  }, (e) => {
+    console.error(e);
+    $("#wall").innerHTML = `<div class="empty">Impossible de charger les messages (${esc(e.code || e.message)}).</div>`;
+  });
+
+  // Mes messages (écrits depuis cet appareil)
+  onSnapshot(query(col, where("ownerUid", "==", user.uid)), { includeMetadataChanges: true }, (snap) => {
+    mine = snap.docs.filter((d) => !d.metadata.hasPendingWrites)
+      .map((d) => ({ id: d.id, ...d.data() })).sort(byDateDesc);
     drawMine();
   }, (e) => console.error(e));
 }
@@ -128,14 +137,20 @@ $("#form").addEventListener("submit", async (ev) => {
 
   const btn = $("#send"); btn.disabled = true; btn.textContent = "Envoi…";
   try {
-    await addDoc(col, { name, relation, message, status: "pending", ownerUid: user.uid, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    const timeout = new Promise((_, rej) => setTimeout(() => rej({ code: "timeout" }), 15000));
+    await Promise.race([
+      addDoc(col, { name, relation, message, status: "pending", ownerUid: user.uid, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }),
+      timeout
+    ]);
     localStorage.setItem("lastSend", Date.now());
     ev.target.reset(); $("#count").textContent = "0 / 1500";
     toast("Merci ! Votre message a bien été envoyé. Il sera publié dès qu'il aura été validé par les mariés.");
     $("#mine-sec").scrollIntoView({ behavior: "smooth" });
   } catch (e) {
     console.error(e);
-    toast("Le message n'a pas pu être envoyé. Vérifiez votre connexion et réessayez.", "err");
+    toast(e.code === "timeout"
+      ? "Pas de réponse du serveur. Vérifiez votre connexion et réessayez."
+      : "Le message n'a pas pu être envoyé (" + (e.code || e.message) + ").", "err", 8000);
   } finally { btn.disabled = false; btn.textContent = "Envoyer mon message"; }
 });
 
