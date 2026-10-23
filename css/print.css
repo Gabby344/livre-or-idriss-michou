@@ -41,13 +41,13 @@
 .mpage .by b{display:block;font-family:var(--display);font-style:italic;font-weight:500;font-size:15pt;color:var(--ink)}
 .mpage .pn{position:absolute;bottom:3mm;left:0;right:0;text-align:center;font-size:8pt;color:#9aa3b5}
 
-/* Fin */
+/* Fin (page « Merci ») — texte corrigé : il passe maintenant à la ligne */
 .closing{background:var(--ink);color:#fff;align-items:center;text-align:center}
 .closing .ph{width:100%;flex:0 0 112mm;position:relative;overflow:hidden}
 .closing .ph img{width:100%;height:100%;object-fit:cover;object-position:center 22%}
-.closing .in{padding:9mm 16mm 0;display:grid;gap:4mm;justify-items:center}
+.closing .in{padding:9mm 16mm 0;display:grid;grid-template-columns:minmax(0,1fr);gap:4mm;justify-items:center;width:100%;box-sizing:border-box}
 .closing h2{font-size:34pt;font-style:italic;color:#fff}
-.closing p{margin:0;font-family:var(--display);font-size:11.5pt;line-height:1.55;color:#dde3ef}
+.closing p{margin:0;font-family:var(--display);font-size:11.5pt;line-height:1.55;color:#dde3ef;max-width:100%;overflow-wrap:anywhere}
 .closing .sig{font-style:italic;font-size:15pt;color:#e2c37e}
 .closing .qrrow{display:flex;gap:5mm;align-items:center;text-align:left;margin-top:1mm}
 .closing .qrrow .q{background:#fff;padding:2mm;line-height:0;border-radius:2mm}
