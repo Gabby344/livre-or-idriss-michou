@@ -9,18 +9,50 @@ function shuffled(arr, seed) { const r = mulberry32(seed), a = [...arr]; for (le
 let seed = +localStorage.getItem("bookSeed") || 2026;
 let messages = [];
 
-onAuthStateChanged(auth, async (user) => {
-  if (!(await isAdmin(user))) { $("#gate").hidden = false; $("#toolbar").hidden = true; return; }
-  $("#gate").hidden = true; $("#toolbar").hidden = false;
+function showError(text) {
+  $("#err").hidden = !text;
+  $("#err").textContent = text || "";
+}
+
+async function load() {
+  $("#stat").textContent = "Chargement des messages…";
+  showError("");
   try {
-    const snap = await getDocs(query(collection(db, "messages"), where("status", "==", "approved")));
+    const timeout = new Promise((_, rej) => setTimeout(() => rej({ code: "timeout" }), 15000));
+    const snap = await Promise.race([
+      getDocs(query(collection(db, "messages"), where("status", "==", "approved"))),
+      timeout
+    ]);
     messages = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (a.createdAt?.seconds ?? 0) - (b.createdAt?.seconds ?? 0));
     build();
-  } catch (e) { console.error(e); $("#stat").textContent = "Impossible de charger les messages."; }
-});
+  } catch (e) {
+    console.error(e);
+    messages = [];
+    build();   // on affiche quand même la couverture, la préface et la page de fin
+    $("#stat").textContent = "Messages non chargés";
+    showError(e.code === "permission-denied"
+      ? "Lecture refusée par Firestore : vérifiez les règles (Publier) et que vous êtes connecté avec l'e-mail administrateur."
+      : e.code === "timeout"
+        ? "Pas de réponse du serveur. Vérifiez votre connexion puis rechargez la page."
+        : "Erreur : " + (e.code || e.message));
+  }
+}
+
+(async () => {
+  await auth.authStateReady();           // attend que la session soit restaurée
+  onAuthStateChanged(auth, async (user) => {
+    if (!(await isAdmin(user))) {
+      $("#gate").hidden = false; $("#toolbar").hidden = true; $("#book").innerHTML = "";
+      return;
+    }
+    $("#gate").hidden = true; $("#toolbar").hidden = false;
+    load();
+  });
+})();
 
 $("#print").onclick = () => window.print();
+$("#reload").onclick = () => load();
 $("#shuffle").onclick = () => { seed = Math.floor(Math.random() * 1e6); localStorage.setItem("bookSeed", seed); build(); };
 
 function build() {
@@ -45,7 +77,7 @@ function build() {
 
   // Messages : une page chacun, photo tirée au hasard dans la galerie
   messages.forEach((m, i) => {
-    const photo = deck[i % deck.length], len = m.message.length;
+    const photo = deck[i % deck.length], len = String(m.message).length;
     const size = len > 1000 ? "xlong" : len > 600 ? "long" : "";
     pages.push(`<section class="page mpage ${size}">
       <div class="ph"><img class="bg" src="${photoUrl(photo.file)}" alt=""><img class="fg" src="${photoUrl(photo.file)}" alt=""></div>
@@ -67,5 +99,7 @@ function build() {
 
   $("#book").innerHTML = pages.join("");
   renderQR("#qr-end", 80);
-  $("#stat").textContent = `${messages.length} message${messages.length > 1 ? "s" : ""} approuvé${messages.length > 1 ? "s" : ""} · ${pages.length} pages`;
+  $("#stat").textContent = messages.length
+    ? `${messages.length} message${messages.length > 1 ? "s" : ""} approuvé${messages.length > 1 ? "s" : ""} · ${pages.length} pages`
+    : `Aucun message approuvé pour l'instant · ${pages.length} pages (couverture, préface, fin)`;
 }
