@@ -10,6 +10,9 @@
 </head>
 <body>
 
+<div id="status" role="status" aria-live="polite" hidden
+     style="position:fixed;top:0;left:0;right:0;z-index:60;padding:.9rem 1rem;text-align:center;font-weight:600"></div>
+
 <main id="login-view" class="login" hidden>
   <h1>Espace administrateur</h1>
   <form id="login-form" class="card">
@@ -21,6 +24,8 @@
   <p class="hint" style="margin-top:1rem"><a href="index.html">Retour au livre d'or</a></p>
 </main>
 
+<p id="loading" style="text-align:center;margin:4rem 1rem;color:#5d6678">Chargement…</p>
+
 <div id="dash-view" hidden>
   <header class="admin-top">
     <div class="wrap">
@@ -28,7 +33,7 @@
       <nav>
         <a class="btn btn-ghost btn-sm" href="print.html">Imprimer le livre</a>
         <a class="btn btn-ghost btn-sm" href="index.html">Voir le site</a>
-        <button class="btn btn-ghost btn-sm" id="logout">Se déconnecter</button>
+        <button class="btn btn-ghost btn-sm" id="logout" type="button">Se déconnecter</button>
       </nav>
     </div>
   </header>
