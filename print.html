@@ -13,19 +13,25 @@
 
 <div class="toolbar no-print" id="toolbar" hidden>
   <div class="wrap">
-    <div><strong id="stat">Chargement…</strong><br><span class="hint">Format A5 · une page par message · dans la fenêtre d'impression, choisissez « Enregistrer au format PDF » et désactivez les en-têtes/pieds de page.</span></div>
+    <div>
+      <strong id="stat">Chargement…</strong><br>
+      <span class="hint">Format A5 · une page par message · dans la fenêtre d'impression, choisissez « Enregistrer au format PDF » et désactivez les en-têtes/pieds de page.</span>
+      <p id="err" hidden style="margin:.5rem 0 0;padding:.6rem .9rem;border-radius:10px;background:#fbe0e3;color:#7a1527;font-weight:500"></p>
+    </div>
     <div class="row-actions">
       <a class="btn btn-ghost btn-sm" href="admin.html">← Modération</a>
-      <button class="btn btn-ghost btn-sm" id="shuffle">Changer les photos</button>
-      <button class="btn btn-wine btn-sm" id="print">Imprimer le livre</button>
+      <button class="btn btn-ghost btn-sm" id="reload" type="button">Actualiser</button>
+      <button class="btn btn-ghost btn-sm" id="shuffle" type="button">Changer les photos</button>
+      <button class="btn btn-wine btn-sm" id="print" type="button">Imprimer le livre</button>
     </div>
   </div>
 </div>
 
 <div class="gate no-print" id="gate" hidden>
   <h1>Accès réservé</h1>
-  <p>L'impression du livre est réservée à l'administrateur.</p>
+  <p>L'impression du livre est réservée à l'administrateur. Connectez-vous d'abord sur la page de modération, puis revenez ici.</p>
   <a class="btn btn-wine" href="admin.html">Se connecter</a>
+  <p class="hint" style="margin-top:1rem">Les invités, eux, voient les messages validés sur la <a href="index.html">page principale</a>.</p>
 </div>
 
 <main id="book"></main>
