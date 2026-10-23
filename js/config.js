@@ -13,7 +13,7 @@ export const firebaseConfig = {
 
 // URL publique du site (sert au code QR). À remplacer après la publication sur GitHub Pages.
 // Exemple : "https://gabbyumba.github.io/livre-or-mariage/"
-export const SITE_URL = "https://VOTRE-PSEUDO.github.io/livre-or-mariage/";
+export const SITE_URL = "https://livre-or-idriss-michou.vercel.app/";
 
 export const COUPLE = {
   groom: "Idriss",
