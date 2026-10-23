@@ -1,6 +1,7 @@
 import { $, esc, fmtDate, toast, renderFooter } from "./common.js";
+import { firebaseConfig, DATABASE_ID } from "./config.js";
 import {
-  db, auth, isAdmin, collection, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp,
+  db, auth, isAdmin, collection, doc, addDoc, updateDoc, deleteDoc, getDocFromServer, onSnapshot, serverTimestamp,
   query, signInWithEmailAndPassword, signOut, onAuthStateChanged
 } from "./firebase.js";
 
@@ -39,8 +40,10 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
   show("dash");
-  unsub = onSnapshot(query(collection(db, "messages")), (snap) => {
-    all = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+  unsub = onSnapshot(query(collection(db, "messages")), { includeMetadataChanges: true }, (snap) => {
+    // On n'affiche que ce que le SERVEUR a confirmé (pas la mémoire locale du navigateur)
+    all = snap.docs.filter((d) => !d.metadata.hasPendingWrites)
+      .map((d) => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (b.createdAt?.seconds ?? 9e12) - (a.createdAt?.seconds ?? 9e12));
     $("#dash-msg").hidden = true;
     draw();
@@ -75,6 +78,33 @@ $("#login-form").addEventListener("submit", async (ev) => {
   } finally { b.disabled = false; }
 });
 $("#logout").onclick = () => signOut(auth);
+
+/* ---------- Diagnostic ---------- */
+$("#diag-info").textContent = `projet « ${firebaseConfig.projectId} » · base « ${DATABASE_ID} »`;
+$("#diag-btn").onclick = async () => {
+  const r = $("#diag-res"); r.textContent = "Test en cours…";
+  try {
+    const timeout = new Promise((_, rej) => setTimeout(() => rej({ code: "timeout" }), 12000));
+    const test = (async () => {
+      const ref = await addDoc(collection(db, "messages"), {
+        name: "TEST ADMIN", relation: "Test", message: "Message de test (à supprimer)",
+        status: "pending", ownerUid: auth.currentUser.uid,
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+      });
+      const back = await getDocFromServer(ref);
+      return { id: ref.id, ok: back.exists() };
+    })();
+    const res = await Promise.race([test, timeout]);
+    r.textContent = res.ok
+      ? `✅ Écriture confirmée par le serveur (id ${res.id}). Dans Firestore, ouvrez la base « ${DATABASE_ID} » > collection « messages ».`
+      : "❌ Écrit mais introuvable sur le serveur.";
+  } catch (e) {
+    console.error(e);
+    r.textContent = e.code === "timeout"
+      ? `❌ Aucune réponse du serveur : la base « ${DATABASE_ID} » n'existe sans doute pas sous ce nom. Essayez l'autre valeur dans config.js ("(default)" ou "default").`
+      : `❌ ${e.code || e.message}`;
+  }
+};
 
 function draw() {
   const count = (s) => s === "all" ? all.length : all.filter((m) => m.status === s).length;
