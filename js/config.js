@@ -11,8 +11,9 @@ export const firebaseConfig = {
   appId: "1:1061478874051:web:524b350ddec29e5d9fdb76"
 };
 
-// URL publique du site (sert au code QR). À remplacer après la publication sur GitHub Pages.
-// Exemple : "https://gabbyumba.github.io/livre-or-mariage/"
+// URL publique du site (sert au code QR).
+// Exemple : "https://gabby344.github.io/livre-or-mariage/"
+// Remplacez par votre vraie adresse exacte.
 export const SITE_URL = "https://livre-or-idriss-michou.vercel.app/";
 
 export const COUPLE = {
@@ -70,11 +71,14 @@ export const BOOK = {
 };
 
 export const RELATIONS = [
-  "Famille de la mariée",
-  "Famille du marié",
-  "Collègue",
-  "Communauté / Église",
-  "Voisin(e)"
+  "Famille de la mariée", "Famille du marié", "Ami(e) des mariés",
+  "Collègue", "Communauté / Église", "Voisin(e)", "Invité(e)"
 ];
 
+// E-mail de l'administrateur (doit être identique à celui des règles Firestore)
 export const ADMIN_EMAIL = "gabbyumba344@gmail.com";
+
+// Nom EXACT de la base, tel qu'il s'affiche en haut de Firestore > Données.
+// Votre console affiche « default » (sans parenthèses) → laissez "default".
+// Si elle affichait « (default) » avec parenthèses, mettez "(default)".
+export const DATABASE_ID = "default";
